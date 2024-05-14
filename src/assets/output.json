@@ -1,0 +1,234 @@
+[
+  {
+    "userId": 1,
+    "id": "test1",
+    "email": "test1@test1.com",
+    "state": "ENABLED",
+    "product": {
+      "create": [
+        {
+          "userId": 1,
+          "productId": 1,
+          "name": "white shirt",
+          "images": "[https://shirt.test.com, https://shirt.2test.com]",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 1
+              }
+            ]
+          },
+          "productComment": {
+            "create": [
+              {
+                "productId": 1,
+                "productCommentId": 1,
+                "conent": "thank you"
+              },
+              {
+                "productId": 1,
+                "productCommentId": 2,
+                "conent": "thank you"
+              }
+            ]
+          }
+        },
+        {
+          "userId": 1,
+          "productId": 2,
+          "name": "red shirt",
+          "images": "[https://shirt.test.com, https://shirt.2test.com]",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 1
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "userId": 2,
+    "id": "test2",
+    "email": "test2@test2.com",
+    "state": "ENABLED",
+    "product": {
+      "create": [
+        {
+          "userId": 2,
+          "productId": 3,
+          "name": "green shirt",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 2
+              },
+              {
+                "id": 3
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 2
+              }
+            ]
+          },
+          "productComment": {
+            "create": [
+              {
+                "productId": 3,
+                "productCommentId": 3,
+                "conent": "thank you"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "userId": 3,
+    "id": "test3",
+    "email": "test3@test3.com",
+    "state": "ENABLED",
+    "product": {
+      "create": [
+        {
+          "userId": 3,
+          "productId": 4,
+          "name": "white pants",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 4
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 3
+              }
+            ]
+          },
+          "productComment": {
+            "create": [
+              {
+                "productId": 4,
+                "productCommentId": 4,
+                "conent": "thank you"
+              }
+            ]
+          }
+        },
+        {
+          "userId": 3,
+          "productId": 5,
+          "name": "red pants",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 5
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 4
+              }
+            ]
+          },
+          "productComment": {
+            "create": [
+              {
+                "productId": 5,
+                "productCommentId": 5,
+                "conent": "thank you"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "userId": 4,
+    "id": "test4",
+    "email": "test4@test4.com",
+    "state": "DISABLED",
+    "product": {
+      "create": [
+        {
+          "userId": 4,
+          "productId": 6,
+          "name": "green pants",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 6
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "userId": 5,
+    "id": "test5",
+    "email": "test5@test5.com",
+    "state": "ENABLED",
+    "product": {
+      "create": [
+        {
+          "userId": 5,
+          "productId": 7,
+          "name": "yellow pants",
+          "infoProductTag": {
+            "connect": [
+              {
+                "id": 7
+              }
+            ]
+          },
+          "infoProductType": {
+            "connect": [
+              {
+                "id": 6
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]
