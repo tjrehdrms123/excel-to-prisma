@@ -1,9 +1,10 @@
 {
   "name": "excel-to-prisma",
   "version": "1.0.0",
-  "description": "",
+  "description": "excel-to-prisma is a package that parses Excel data and converts it into a data object that can be used in Prisma ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "homepage": "https://github.com/tjrehdrms123/excel-to-prisma",
   "repository": {
     "type": "git",
     "url": "https://github.com/tjrehdrms123/excel-to-prisma"
