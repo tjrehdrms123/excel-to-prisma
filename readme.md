@@ -147,11 +147,11 @@ Refer to the code comments for detailed API usage and method descriptions.
 
 ## Example
 
-- [Excel](https://github.com/tjrehdrms123/excel-to-prisma/src/assets/data.xlsx)
+- [Excel](https://github.com/tjrehdrms123/excel-to-prisma/tree/main/src/assets/data.xlsx)
 
-- [Test Code](https://github.com/tjrehdrms123/excel-to-prisma/src/tests/base.spec.ts)
+- [Test Code](https://github.com/tjrehdrms123/excel-to-prisma/tree/main/src/tests/base.spec.ts)
 
-- [Output JSON](https://github.com/tjrehdrms123/excel-to-prisma/src/assets/output.json)
+- [Output JSON](https://github.com/tjrehdrms123/excel-to-prisma/tree/main/src/assets/output.json)
 
 ## Contact
 
