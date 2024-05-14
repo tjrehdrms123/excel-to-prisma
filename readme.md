@@ -17,7 +17,8 @@ excel-to-prisma works as if it reads the parent table and concatenates the child
 First, import and create an instance of excel-to-prisma with the path to your Excel file and the worksheet name you intend to work with:
 
 ```js
-import ExcelToPrisma from "excel-to-prisma";
+import { ExcelToPrisma } from "excel-to-prisma";
+
 const excelToPrisma = new ExcelToPrisma({
   filePath: "./data.xlsx", // your xlsx file
   oneToOneOrManyOptions: {
