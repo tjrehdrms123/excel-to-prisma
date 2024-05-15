@@ -5,7 +5,7 @@ describe('ExcelToPrisma tests', () => {
   beforeEach(async() => {
     excelToPrisma = new ExcelToPrisma({
       filePath: 'src/assets/data.xlsx',
-      oneToOneOrManyOptions : {
+      oneToOneOrManyConnectOptions : {
         keyword: 'info',
         split: '|'
       }
@@ -22,8 +22,9 @@ describe('ExcelToPrisma tests', () => {
   it('should linking many to many relationships', async () => {
     const findKeyArr = [2,3,5];
     await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 });
-    await excelToPrisma.manyToMany({ name: "post", fk: 'userId', rowNameIndex: 2, startRowIndex: 3 });
+    await excelToPrisma.oneToManyCreate({ name: "post", fk: 'userId', rowNameIndex: 2, startRowIndex: 3 });
     const userPosts = await excelToPrisma.getData();
+    
     expect(userPosts.filter(userPost => findKeyArr.includes(userPost.userId))).toContainEqual(
       expect.objectContaining({ post: { create: expect.any(Array) } })
     );
@@ -32,10 +33,11 @@ describe('ExcelToPrisma tests', () => {
   it('should linking subtables in a many to many relationship', async () => {
     const findKeyArr = [1,3,4,5];
     await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 });
-    await excelToPrisma.manyToMany({ name: "product", fk: 'userId', rowNameIndex: 2, startRowIndex: 3 }).then( async (sheetOption) => {
-      await excelToPrisma.manyToManySub({ name: "productComment", fk: 'productId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 });
+    await excelToPrisma.oneToManyCreate({ name: "product", fk: 'userId', rowNameIndex: 2, startRowIndex: 3 }).then( async (sheetOption) => {
+      await excelToPrisma.oneToManySubCreate({ name: "productComment", fk: 'productId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 });
     });
     const userProductComments = await excelToPrisma.getData();
+    
     expect(userProductComments.filter(userProductComment => findKeyArr.includes(userProductComment.userId))).toContainEqual(
       expect.objectContaining({ 
         product: expect.objectContaining({ 

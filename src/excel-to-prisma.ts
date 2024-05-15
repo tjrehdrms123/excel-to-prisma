@@ -1,34 +1,34 @@
 import exceljs from 'exceljs';
-import { IRowObject, ISheetOption, ISheetManyToManyOption, IoneToOneOrManyOptions, IconstructorOptions, IConeToOneOrManyOptions, IparseConnect, ImanyToManySub } from './interface';
+import { IrowObject, IsheetOption, IConeToOneOrManyConnectOptions, IoneToManyCreateOption, IconstructorOptions, IoneToManySubCreate, IparseConnect, IoneToOneOrManyConnectOptions } from './interface';
 
 export class ExcelToPrisma {
   private workbook: any;
-  private result: IRowObject[] = [];
+  private result: IrowObject[] = [];
   private filePath: string;
-  private oneToOneOrManyOptions: IConeToOneOrManyOptions;
+  private oneToOneOrManyConnectOptions: IConeToOneOrManyConnectOptions;
 
   constructor(options: IconstructorOptions) {
     this.workbook = new exceljs.Workbook();
     this.filePath = options.filePath;
-    this.oneToOneOrManyOptions = options.oneToOneOrManyOptions;
+    this.oneToOneOrManyConnectOptions = options.oneToOneOrManyConnectOptions;
   }
 
   public async initialize(): Promise<void> {
     await this.workbook.xlsx.readFile(this.filePath);
   }
 
-  public async readSheet(sheetOption: ISheetOption): Promise<IRowObject[]> {
-    const { name, rowNameIndex, startRowIndex } = sheetOption;
+  public async readSheet(option: IsheetOption): Promise<IrowObject[]> {
+    const { name, rowNameIndex, startRowIndex } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
     for (let i = startRowIndex; i <= sheet.rowCount; i++) {
       const rowDatas = sheet.getRow(i).values;
-      const oneToOneOrManyOption: IoneToOneOrManyOptions = {
+      const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
         columnNames: columnNames, 
         rowDatas: rowDatas, 
-        keyword: this.oneToOneOrManyOptions.keyword
+        keyword: this.oneToOneOrManyConnectOptions.keyword
       };
-      const rowDataObject = this.oneToOneOrMany(oneToOneOrManyOption);
+      const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
       if (rowDataObject[`${name}Id`] !== undefined) {
         this.result.push(rowDataObject);
       }
@@ -36,8 +36,8 @@ export class ExcelToPrisma {
     return this.result;
   }
 
-  private oneToOneOrMany(sheetOption: IoneToOneOrManyOptions) {
-    const { columnNames, rowDatas, keyword } = sheetOption;
+  private oneToOneOrManyConnect(option: IoneToOneOrManyConnectOptions) {
+    const { columnNames, rowDatas, keyword } = option;
     const obj: { [key: string]: any } = {};
     columnNames.forEach((columnName: string, index: number) => {
       obj[columnName] = rowDatas[index];
@@ -55,24 +55,24 @@ export class ExcelToPrisma {
     if (value !== undefined && value !== false) {
       return typeof value === "number"
         ? [{ id: parseInt(value.toString()) }]
-        : value.split(this.oneToOneOrManyOptions.split).map((id: string) => ({ id: parseInt(id) }));
+        : value.split(this.oneToOneOrManyConnectOptions.split).map((id: string) => ({ id: parseInt(id) }));
     }
   }
 
-  public async manyToMany(sheetManyToManyOption: ISheetManyToManyOption) {
-    const { name, fk, rowNameIndex, startRowIndex } = sheetManyToManyOption;
+  public async oneToManyCreate(option: IoneToManyCreateOption) {
+    const { name, fk, rowNameIndex, startRowIndex } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
     for (let i = 0; i < this.result.length; i++) {
       let data: any[] = [];
       for (let j = startRowIndex; j <= sheet.rowCount; j++) {
         const rowDatas = sheet.getRow(j).values;
-        const oneToOneOrManyOption: IoneToOneOrManyOptions = {
+        const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
           columnNames: columnNames, 
           rowDatas: rowDatas, 
-          keyword: this.oneToOneOrManyOptions.keyword
+          keyword: this.oneToOneOrManyConnectOptions.keyword
         };
-        const rowDataObject = this.oneToOneOrMany(oneToOneOrManyOption);
+        const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
         if (rowDataObject[fk] !== undefined && this.result[i][fk] === rowDataObject[fk]) {
           data.push(rowDataObject);
         }
@@ -81,11 +81,11 @@ export class ExcelToPrisma {
         this.result[i][name] = { create: data };
       }
     }
-    return sheetManyToManyOption;
+    return option;
   }
 
-  public async manyToManySub(sheetOption: ImanyToManySub) {
-    const { name, fk, many, rowNameIndex, startRowIndex } = sheetOption;
+  public async oneToManySubCreate(option: IoneToManySubCreate) {
+    const { name, fk, many, rowNameIndex, startRowIndex } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
     for (let i = 0; i < this.result.length; i++) {
@@ -94,12 +94,12 @@ export class ExcelToPrisma {
         const manyId = this.result[i][many]["create"][j][fk];
         for (let k = startRowIndex; k <= sheet.rowCount; k++) {
           const rowDatas = sheet.getRow(k).values;
-          const oneToOneOrManyOption: IoneToOneOrManyOptions = {
+          const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
             columnNames: columnNames, 
             rowDatas: rowDatas, 
-            keyword: this.oneToOneOrManyOptions.keyword
+            keyword: this.oneToOneOrManyConnectOptions.keyword
           };
-          const rowDataObject = this.oneToOneOrMany(oneToOneOrManyOption);
+          const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
           if (rowDataObject[fk] !== undefined && manyId === rowDataObject[fk]) {
             data.push({
               ...rowDataObject,
@@ -112,7 +112,7 @@ export class ExcelToPrisma {
         }
       }
     }
-    return sheetOption;
+    return option;
   }
 
   public getData() {

@@ -4,34 +4,34 @@
  * C: constructor
  */
 
-export type IRowObject = {
+export type IrowObject = {
   [key: string]: any;
 }
 
-export type ISheetOption = {
+export type IsheetOption = {
   name: string;
   rowNameIndex: number;
   startRowIndex: number;
 }
 
-export type ISheetManyToManyOption = {
+export type IoneToManyCreateOption = {
   name: string;
   fk: string;
   rowNameIndex: number;
   startRowIndex: number;
 }
 
-export type IConeToOneOrManyOptions = {
+export type IConeToOneOrManyConnectOptions = {
   keyword: string;
   split: string;
 }
 
 export type IconstructorOptions = {
   filePath: string;
-  oneToOneOrManyOptions: IConeToOneOrManyOptions;
+  oneToOneOrManyConnectOptions: IConeToOneOrManyConnectOptions;
 }
 
-export type IoneToOneOrManyOptions = {
+export type IoneToOneOrManyConnectOptions = {
   columnNames: any,
   rowDatas: any,
   keyword: string
@@ -41,7 +41,7 @@ export type IparseConnect = {
   value: any;
 }
 
-export type ImanyToManySub = {
+export type IoneToManySubCreate = {
   name: string;
   fk: string;
   many: string;

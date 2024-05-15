@@ -21,7 +21,7 @@ import { ExcelToPrisma } from "excel-to-prisma";
 
 const excelToPrisma = new ExcelToPrisma({
   filePath: "./data.xlsx", // your xlsx file
-  oneToOneOrManyOptions: {
+  oneToOneOrManyConnectOptions: {
     keyword: "info", // Separator string for one-to-many relationship
     split: "|", // String to separate multiple values
   },
@@ -41,12 +41,12 @@ await excelToPrisma.readSheet({
 });
 ```
 
-### many to many
+### One to Many Create
 
-When linking to a parent table in a ManyToMany relationship, you would write:
+When linking to a parent table in a one to many relationship, you would write:
 
 ```js
-await excelToPrisma.manyToMany({
+await excelToPrisma.oneToManyCreate({
   name: "post",
   fk: "userId",
   rowNameIndex: 2,
@@ -54,20 +54,20 @@ await excelToPrisma.manyToMany({
 });
 ```
 
-### Subtables in a many to many relationship
+### Subtables in relationship
 
-When connecting child tables in a manyToMany relationship, write as follows:
+When connecting child tables in relationship, write as follows:
 
 ```js
 await excelToPrisma
-  .manyToMany({
+  .oneToManyCreate({
     name: "product",
     fk: "userId",
     rowNameIndex: 2,
     startRowIndex: 3,
   })
   .then(async (sheetOption) => {
-    await excelToPrisma.manyToManySub({
+    await excelToPrisma.oneToManySubCreate({
       name: "productComment",
       fk: "productId",
       many: sheetOption.name,
@@ -98,21 +98,21 @@ async function main() {
     rowNameIndex: 2,
     startRowIndex: 3,
   });
-  await excelToPrisma.manyToMany({
+  await excelToPrisma.oneToManyCreate({
     name: "post",
     fk: "userId",
     rowNameIndex: 2,
     startRowIndex: 3,
   });
   await excelToPrisma
-    .manyToMany({
+    .oneToManyCreate({
       name: "product",
       fk: "userId",
       rowNameIndex: 2,
       startRowIndex: 3,
     })
     .then(async (sheetOption) => {
-      await excelToPrisma.manyToManySub({
+      await excelToPrisma.oneToManySubCreate({
         name: "productComment",
         fk: "productId",
         many: sheetOption.name,
