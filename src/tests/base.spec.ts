@@ -52,4 +52,34 @@ describe('ExcelToPrisma tests', () => {
       })
     );
   });
+
+  it('should linking subtables in a one to many in many relationship', async () => {
+    const findKeyArr = [1,4,5];
+    await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 }).then(async (sheetOption) => {
+      await excelToPrisma.oneToManyCreate({ name: "product", fk: 'userId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 }).then(async (sheetOption) => {
+        await excelToPrisma.oneToManyCreate({ name: "productComment", fk: 'productId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 }).then(async (sheetOption) => {
+          await excelToPrisma.oneToManyCreate({ name: "productCommentHistory", fk: "productCommentId", many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 });
+        });
+      });
+    });
+    const userProductCommentHistories = await excelToPrisma.getData();
+  
+    expect(userProductCommentHistories.filter(userProductCommentHistory => findKeyArr.includes(userProductCommentHistory.userId))).toContainEqual(
+      expect.objectContaining({
+        product: expect.objectContaining({
+          create: expect.arrayContaining([
+            expect.objectContaining({
+              productComment: expect.objectContaining({
+                create: expect.arrayContaining([
+                  expect.objectContaining({
+                    productCommentHistory: expect.objectContaining({ create: expect.any(Array) })
+                  })
+                ])
+              })
+            })
+          ])
+        })
+      })
+    );
+  });
 });

@@ -14,13 +14,6 @@ export type IsheetOption = {
   startRowIndex: number;
 }
 
-export type IoneToManyCreateOption = {
-  name: string;
-  fk: string;
-  rowNameIndex: number;
-  startRowIndex: number;
-}
-
 export type IConeToOneOrManyConnectOptions = {
   keyword: string;
   split: string;
@@ -47,4 +40,12 @@ export type IoneToManySubCreate = {
   many: string;
   rowNameIndex: number;
   startRowIndex: number;
+}
+
+export type IparseCreate = {
+  obj: IrowObject,
+  newData: IrowObject,
+  fk: string,
+  name: string,
+  many: string
 }

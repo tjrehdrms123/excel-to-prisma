@@ -23,7 +23,7 @@
     "package": "npm run test && npm run build && npm run bump && npm publish",
     "build": "tsc",
     "test": "jest",
-    "start": "nodemon ./src/test.ts"
+    "start": "nodemon ./exec/test.ts"
   },
   "author": "Seog Donggeun",
   "license": "ISC",

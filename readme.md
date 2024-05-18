@@ -45,6 +45,8 @@ await excelToPrisma.readSheet({
 
 When linking to a parent table in a one to many relationship, you would write:
 
+The oneToManyCreate method is executing the oneToOneOrManyConnect method
+
 ```js
 await excelToPrisma.oneToManyCreate({
   name: "post",
@@ -60,20 +62,25 @@ When connecting child tables in relationship, write as follows:
 
 ```js
 await excelToPrisma
-  .oneToManyCreate({
-    name: "product",
-    fk: "userId",
-    rowNameIndex: 2,
-    startRowIndex: 3,
-  })
+  .readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 })
   .then(async (sheetOption) => {
-    await excelToPrisma.oneToManySubCreate({
-      name: "productComment",
-      fk: "productId",
-      many: sheetOption.name,
-      rowNameIndex: 2,
-      startRowIndex: 3,
-    });
+    await excelToPrisma
+      .oneToManyCreate({
+        name: "product",
+        fk: "userId",
+        many: sheetOption.name,
+        rowNameIndex: 2,
+        startRowIndex: 3,
+      })
+      .then(async (sheetOption) => {
+        await excelToPrisma.oneToManyCreate({
+          name: "productComment",
+          fk: "productId",
+          many: sheetOption.name,
+          rowNameIndex: 2,
+          startRowIndex: 3,
+        });
+      });
   });
 ```
 
