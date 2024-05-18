@@ -80,7 +80,7 @@ await excelToPrisma
 ### Axios usage and example code
 
 ```js
-import ExcelToPrisma from "excel-to-prisma";
+import { ExcelToPrisma } from "excel-to-prisma";
 import axios from "axios";
 
 async function main() {
@@ -93,32 +93,43 @@ async function main() {
     },
   });
   await excelToPrisma.initialize();
-  await excelToPrisma.readSheet({
-    name: "user",
-    rowNameIndex: 2,
-    startRowIndex: 3,
-  });
-  await excelToPrisma.oneToManyCreate({
-    name: "post",
-    fk: "userId",
-    rowNameIndex: 2,
-    startRowIndex: 3,
-  });
   await excelToPrisma
-    .oneToManyCreate({
-      name: "product",
-      fk: "userId",
-      rowNameIndex: 2,
-      startRowIndex: 3,
-    })
+    .readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 })
     .then(async (sheetOption) => {
-      await excelToPrisma.oneToManySubCreate({
-        name: "productComment",
-        fk: "productId",
+      await excelToPrisma.oneToManyCreate({
+        name: "post",
+        fk: "userId",
         many: sheetOption.name,
         rowNameIndex: 2,
         startRowIndex: 3,
       });
+      await excelToPrisma
+        .oneToManyCreate({
+          name: "product",
+          fk: "userId",
+          many: sheetOption.name,
+          rowNameIndex: 2,
+          startRowIndex: 3,
+        })
+        .then(async (sheetOption) => {
+          await excelToPrisma
+            .oneToManyCreate({
+              name: "productComment",
+              fk: "productId",
+              many: sheetOption.name,
+              rowNameIndex: 2,
+              startRowIndex: 3,
+            })
+            .then(async (sheetOption) => {
+              await excelToPrisma.oneToManyCreate({
+                name: "productCommentHistory",
+                fk: "productCommentId",
+                many: sheetOption.name,
+                rowNameIndex: 2,
+                startRowIndex: 3,
+              });
+            });
+        });
     });
   const data = JSON.stringify(excelToPrisma.getData()); // stringified data
 

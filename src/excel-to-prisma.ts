@@ -17,7 +17,7 @@ export class ExcelToPrisma {
     await this.workbook.xlsx.readFile(this.filePath);
   }
 
-  public async readSheet(option: IsheetOption): Promise<IrowObject[]> {
+  public async readSheet(option: IsheetOption) {
     const { name, rowNameIndex, startRowIndex } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
@@ -33,7 +33,7 @@ export class ExcelToPrisma {
         this.result.push(rowDataObject);
       }
     }
-    return this.result;
+    return option;
   }
 
   private oneToOneOrManyConnect(option: IoneToOneOrManyConnectOptions) {
@@ -59,63 +59,74 @@ export class ExcelToPrisma {
     }
   }
 
-  public async oneToManyCreate(option: IoneToManyCreateOption) {
-    const { name, fk, rowNameIndex, startRowIndex } = option;
+  public async oneToManyCreate(option: IoneToManySubCreate) {
+    const { name, fk, rowNameIndex, startRowIndex, many } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
-    for (let i = 0; i < this.result.length; i++) {
-      let data: any[] = [];
-      for (let j = startRowIndex; j <= sheet.rowCount; j++) {
-        const rowDatas = sheet.getRow(j).values;
-        const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
-          columnNames: columnNames, 
-          rowDatas: rowDatas, 
-          keyword: this.oneToOneOrManyConnectOptions.keyword
-        };
-        const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
-        if (rowDataObject[fk] !== undefined && this.result[i][fk] === rowDataObject[fk]) {
-          data.push(rowDataObject);
+  
+    const dataToAdd = [];
+  
+    for (let j = startRowIndex; j <= sheet.rowCount; j++) {
+      const rowDatas = sheet.getRow(j).values;
+      const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
+        columnNames: columnNames,
+        rowDatas: rowDatas,
+        keyword: this.oneToOneOrManyConnectOptions.keyword
+      };
+      const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
+      dataToAdd.push(rowDataObject);
+    }
+
+    for (const item of dataToAdd) {
+      this.addCommentHistory(this.result, item, fk, name, many);
+    }
+  
+    return option;
+  }
+  
+  private addCommentHistory(obj: any, newHistory: any, fk: string, name: string, many: string): boolean {
+    if (Array.isArray(obj)) {
+      // 배열의 각 항목에 대해 재귀적으로 함수를 호출하여 데이터를 추가
+      for (const item of obj) {
+        if (this.addCommentHistory(item, newHistory, fk, name, many)) return true;
+      }
+    } else if (typeof obj === 'object' && obj !== null) {
+      // obj의 외래 키(fk)가 새로운 객체(newHistory)의 외래 키와 일치하는지 확인
+      if (obj[fk] === newHistory[fk]) {
+        // 만약 객체(obj)에 name 속성이 없는 경우, name 속성을 추가하고 create 배열을 생성
+        if (!obj[name]) {
+          obj[name] = { create: [] };
+        }
+        if (newHistory[fk] != undefined) {
+          obj[name].create.push(newHistory);
+        }
+        return true;
+      }
+      // 객체의 각 속성에 대해 재귀적으로 함수를 호출하여 데이터를 추가
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          if (this.addCommentHistory(obj[key], newHistory, fk, name, many)) return true;
         }
       }
-      if (data.length > 0) {
-        this.result[i][name] = { create: data };
-      }
     }
-    return option;
+    return false;
   }
 
-  public async oneToManySubCreate(option: IoneToManySubCreate) {
-    const { name, fk, many, rowNameIndex, startRowIndex } = option;
-    const sheet = this.workbook.getWorksheet(name);
-    const columnNames = sheet.getRow(rowNameIndex).values;
-    for (let i = 0; i < this.result.length; i++) {
-      for(let j = 0; j < this.result[i][many]["create"].length; j++) {
-        let data: any[] = [];
-        const manyId = this.result[i][many]["create"][j][fk];
-        for (let k = startRowIndex; k <= sheet.rowCount; k++) {
-          const rowDatas = sheet.getRow(k).values;
-          const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
-            columnNames: columnNames, 
-            rowDatas: rowDatas, 
-            keyword: this.oneToOneOrManyConnectOptions.keyword
-          };
-          const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
-          if (rowDataObject[fk] !== undefined && manyId === rowDataObject[fk]) {
-            data.push({
-              ...rowDataObject,
-              [fk]: manyId
-            });
-          }
+  private removeEmptyArrays(data: any[]): any[] {
+    return data.map(user => {
+        for (const key in user) {
+            if (Array.isArray(user[key]) && user[key].length === 0) {
+                delete user[key];
+            } else if (typeof user[key] === 'object' && user[key] !== null) {
+                user[key] = this.removeEmptyArrays([user[key]])[0];
+            }
         }
-        if (data.length > 0) {
-          this.result[i][many]["create"][j][name] = { create: data };
-        }
-      }
-    }
-    return option;
-  }
+        return user;
+    }).filter(user => Object.keys(user).length > 0);
+}
+
 
   public getData() {
-    return this.result;
+    return this.removeEmptyArrays(this.result);
   }
 }

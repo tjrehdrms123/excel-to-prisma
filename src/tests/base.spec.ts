@@ -19,10 +19,11 @@ describe('ExcelToPrisma tests', () => {
     expect(users.length).toBe(5);
   });
 
-  it('should linking many to many relationships', async () => {
+  it('should linking one to many relationships', async () => {
     const findKeyArr = [2,3,5];
-    await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 });
-    await excelToPrisma.oneToManyCreate({ name: "post", fk: 'userId', rowNameIndex: 2, startRowIndex: 3 });
+    await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 }).then( async (sheetOption) => {
+      await excelToPrisma.oneToManyCreate({ name: "post", fk: 'userId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 });
+    });
     const userPosts = await excelToPrisma.getData();
     
     expect(userPosts.filter(userPost => findKeyArr.includes(userPost.userId))).toContainEqual(
@@ -30,11 +31,12 @@ describe('ExcelToPrisma tests', () => {
     );
   });
 
-  it('should linking subtables in a many to many relationship', async () => {
+  it('should linking subtables in a one to many relationship', async () => {
     const findKeyArr = [1,3,4,5];
-    await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 });
-    await excelToPrisma.oneToManyCreate({ name: "product", fk: 'userId', rowNameIndex: 2, startRowIndex: 3 }).then( async (sheetOption) => {
-      await excelToPrisma.oneToManySubCreate({ name: "productComment", fk: 'productId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 });
+    await excelToPrisma.readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 }).then( async (sheetOption) => {
+      await excelToPrisma.oneToManyCreate({ name: "product", fk: 'userId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 }).then( async (sheetOption) => {
+        await excelToPrisma.oneToManyCreate({ name: "productComment", fk: 'productId', many: sheetOption.name, rowNameIndex: 2, startRowIndex: 3 });
+      });
     });
     const userProductComments = await excelToPrisma.getData();
     
