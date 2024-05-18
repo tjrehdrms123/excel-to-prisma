@@ -94,7 +94,7 @@ async function main() {
   // parse excel to prisma
   const excelToPrisma = new ExcelToPrisma({
     filePath: "./data.xlsx",
-    oneToOneOrManyOptions: {
+    oneToOneOrManyConnectOptions: {
       keyword: "info",
       split: "|",
     },
