@@ -1,6 +1,6 @@
 {
   "name": "excel-to-prisma",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "excel-to-prisma is a package that parses Excel data and converts it into a data object that can be used in Prisma ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
