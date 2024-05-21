@@ -25,7 +25,7 @@ export class ExcelToPrisma {
    * @param option List of options to setting data parsing
   */
   public async readSheet(option: IsheetOption) {
-    const { name, rowNameIndex, startRowIndex } = option;
+    const { name, rowNameIndex, startRowIndex, oneKeyword, manyKeyword, oneToOneOrManyOperation } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
     for (let i = startRowIndex; i <= sheet.rowCount; i++) {
@@ -33,13 +33,15 @@ export class ExcelToPrisma {
       const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
         columnNames: columnNames, 
         rowDatas: rowDatas, 
-        keyword: this.oneToOneOrManyConnectOptions.keyword
+        oneKeyword: oneKeyword,
+        manyKeyword: manyKeyword,
+        oneToOneOrManyOperation: oneToOneOrManyOperation
       };
       const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
       // Exclude missing data from sheet 
-      if (rowDataObject[`${name}Id`] !== undefined) {
+      //if (rowDataObject[`${name}Id`] !== undefined) {
         this.result.push(rowDataObject);
-      }
+      //}
     }
     return option;
   }
@@ -49,17 +51,30 @@ export class ExcelToPrisma {
    * @param option List of options to setting data parsing
   */
   private oneToOneOrManyConnect(option: IoneToOneOrManyConnectOptions) {
-    const { columnNames, rowDatas, keyword } = option;
+    const { columnNames, rowDatas, oneKeyword, manyKeyword, oneToOneOrManyOperation } = option;
     const obj: { [key: string]: any } = {};
     columnNames.forEach((columnName: string, index: number) => {
       obj[columnName] = rowDatas[index];
-      if (columnName.length > keyword.length && columnName.substring(0, keyword.length) === keyword && rowDatas[index] !== undefined && rowDatas[index] !== false) {
-        obj[columnName] = {
-          connect: this.parseConnect(rowDatas[index]),
-        };
-      }
+      oneKeyword?.forEach((keyword: string, index: number) => {
+        if (columnName === keyword) {
+          obj[columnName] = {
+            [oneToOneOrManyOperation]: this.parseConnect(rowDatas[index]),
+          };
+        }
+      });
+      manyKeyword?.forEach((keyword: string, index: number) => {
+        if (columnName === keyword) {
+          obj[columnName] = {
+            [oneToOneOrManyOperation]: this.parseConnect(rowDatas[index]),
+          };
+        }
+      })
+      // if (columnName.length > keyword.length && columnName.substring(0, keyword.length) === keyword && rowDatas[index] !== undefined && rowDatas[index] !== false) {
+      //   obj[columnName] = {
+      //     connect: this.parseConnect(rowDatas[index]),
+      //   };
+      // }
     });
-
     return obj;
   }
 
@@ -80,7 +95,7 @@ export class ExcelToPrisma {
    * @param option List of options to setting data parsing
   */
   public async oneToManyCreate(option: IoneToManySubCreate) {
-    const { name, fk, rowNameIndex, startRowIndex, many } = option;
+    const { name, fk, rowNameIndex, startRowIndex, many, oneKeyword, manyKeyword, oneToOneOrManyOperation } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
   
@@ -89,9 +104,11 @@ export class ExcelToPrisma {
     for (let j = startRowIndex; j <= sheet.rowCount; j++) {
       const rowDatas = sheet.getRow(j).values;
       const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
-        columnNames: columnNames,
-        rowDatas: rowDatas,
-        keyword: this.oneToOneOrManyConnectOptions.keyword
+        columnNames: columnNames, 
+        rowDatas: rowDatas, 
+        oneKeyword: oneKeyword,
+        manyKeyword: manyKeyword,
+        oneToOneOrManyOperation: oneToOneOrManyOperation
       };
       const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
       obj.push(rowDataObject);
