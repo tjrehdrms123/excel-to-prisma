@@ -1,16 +1,18 @@
 import exceljs from 'exceljs';
-import { IrowObject, IsheetOption, IConeToOneOrManyConnectOptions, IconstructorOptions, IoneToManySubCreate, IparseConnect, IoneToOneOrManyConnectOptions, IparseCreate } from './interface';
+import { TrowObject, TsheetOption, TsplitKeyword, TconstructorOptions, ToneToManySubCreate, ToneToOneOrManyOptions, TparseCreate, ToneToOneOrManyParse } from './type';
 
 export class ExcelToPrisma {
   private workbook: any;
-  private result: IrowObject[] = [];
+  private result: TrowObject[] = [];
   private filePath: string;
-  private oneToOneOrManyConnectOptions: IConeToOneOrManyConnectOptions;
+  private oneToOneOrManyOptions: TsplitKeyword;
+  private pkDelimiterString: string;
 
-  constructor(options: IconstructorOptions) {
+  constructor(options: TconstructorOptions) {
     this.workbook = new exceljs.Workbook();
     this.filePath = options.filePath;
-    this.oneToOneOrManyConnectOptions = options.oneToOneOrManyConnectOptions;
+    this.oneToOneOrManyOptions = options.oneToOneOrManyOptions;
+    this.pkDelimiterString = options.pkDelimiterString;
   }
 
   /**
@@ -24,69 +26,69 @@ export class ExcelToPrisma {
    * @description Read parent table data into Excel file
    * @param option List of options to setting data parsing
   */
-  public async readSheet(option: IsheetOption) {
-    const { name, rowNameIndex, startRowIndex, oneKeyword, manyKeyword, oneToOneOrManyOperation } = option;
+  public async readSheet(option: TsheetOption) {
+    const { name, rowNameIndex, startRowIndex, oneToOneOrManyOptions } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
     for (let i = startRowIndex; i <= sheet.rowCount; i++) {
       const rowDatas = sheet.getRow(i).values;
-      const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
+      const oneToOneOrManyOption: ToneToOneOrManyOptions = {
         columnNames: columnNames, 
         rowDatas: rowDatas, 
-        oneKeyword: oneKeyword,
-        manyKeyword: manyKeyword,
-        oneToOneOrManyOperation: oneToOneOrManyOperation
+        oneToOneOrManyOptions: oneToOneOrManyOptions
       };
-      const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
-      // Exclude missing data from sheet 
-      //if (rowDataObject[`${name}Id`] !== undefined) {
+      const rowDataObject = this.oneToOneOrMany(oneToOneOrManyOption);
+      // Exclude missing data from sheet
+      if (rowDataObject[`${name}${this.pkDelimiterString}`] !== undefined) {
         this.result.push(rowDataObject);
-      //}
+      }
     }
     return option;
   }
 
   /** 
-   * @description Convert data to prisma-connect format with parseConnect function
+   * @description Convert data to prisma format with oneToOneOrMany function
    * @param option List of options to setting data parsing
   */
-  private oneToOneOrManyConnect(option: IoneToOneOrManyConnectOptions) {
-    const { columnNames, rowDatas, oneKeyword, manyKeyword, oneToOneOrManyOperation } = option;
+  private oneToOneOrMany(option: ToneToOneOrManyOptions) {
+    const { columnNames, rowDatas, oneToOneOrManyOptions } = option;
     const obj: { [key: string]: any } = {};
     columnNames.forEach((columnName: string, index: number) => {
       obj[columnName] = rowDatas[index];
-      oneKeyword?.forEach((keyword: string, index: number) => {
-        if (columnName === keyword) {
-          obj[columnName] = {
-            [oneToOneOrManyOperation]: this.parseConnect(rowDatas[index]),
-          };
-        }
-      });
-      manyKeyword?.forEach((keyword: string, index: number) => {
-        if (columnName === keyword) {
-          obj[columnName] = {
-            [oneToOneOrManyOperation]: this.parseConnect(rowDatas[index]),
-          };
-        }
-      })
-      // if (columnName.length > keyword.length && columnName.substring(0, keyword.length) === keyword && rowDatas[index] !== undefined && rowDatas[index] !== false) {
-      //   obj[columnName] = {
-      //     connect: this.parseConnect(rowDatas[index]),
-      //   };
-      // }
+      // If the oneToOneOrManyOptions option exists, parse it in oneToOneOrManyOptions.option format.
+      if(oneToOneOrManyOptions != undefined && oneToOneOrManyOptions.length > 0) {
+        oneToOneOrManyOptions.forEach((oneToOneOrManyOption) => {
+          const { key, option, operation } = oneToOneOrManyOption;
+          if (columnName === key) {
+            obj[columnName] = {
+              [operation]: this.oneToOneOrManyParse({ value: rowDatas[index], optionType: option })
+            };
+          }
+        });
+      }
     });
     return obj;
   }
 
   /** 
-   * @description Convert data to one or many prisma-connect format
+   * @description Convert data to one or many prisma format
    * @param value target value to convert
   */
-  private parseConnect(value: any) {
-    if (value !== undefined && value !== false) {
-      return typeof value === "number"
-        ? [{ id: parseInt(value.toString()) }]
-        : value.split(this.oneToOneOrManyConnectOptions.split).map((id: string) => ({ id: parseInt(id) }));
+  private oneToOneOrManyParse(option: ToneToOneOrManyParse) {
+    const { value, optionType } = option;
+    if (value !== undefined) {
+      let data;
+      if(optionType === 'one') {
+        data = { id: parseInt(value.toString()) };
+      }
+      if (optionType === 'many') {
+        if(typeof value === 'number') {
+          data = [{ id: parseInt(value.toString()) }]
+        } else {
+          data = value.split(this.oneToOneOrManyOptions.split).map((id: string) => ({ id: parseInt(id) }));
+        }
+      }
+      return data;
     }
   }
 
@@ -94,8 +96,8 @@ export class ExcelToPrisma {
    * @description Convert data to prisma-create format with parseCreate function
    * @param option List of options to setting data parsing
   */
-  public async oneToManyCreate(option: IoneToManySubCreate) {
-    const { name, fk, rowNameIndex, startRowIndex, many, oneKeyword, manyKeyword, oneToOneOrManyOperation } = option;
+  public async oneToManyCreate(option: ToneToManySubCreate) {
+    const { name, fk, rowNameIndex, startRowIndex, many, oneToOneOrManyOptions } = option;
     const sheet = this.workbook.getWorksheet(name);
     const columnNames = sheet.getRow(rowNameIndex).values;
   
@@ -103,26 +105,18 @@ export class ExcelToPrisma {
   
     for (let j = startRowIndex; j <= sheet.rowCount; j++) {
       const rowDatas = sheet.getRow(j).values;
-      const oneToOneOrManyOption: IoneToOneOrManyConnectOptions = {
+      const oneToOneOrManyOption: ToneToOneOrManyOptions = {
         columnNames: columnNames, 
         rowDatas: rowDatas, 
-        oneKeyword: oneKeyword,
-        manyKeyword: manyKeyword,
-        oneToOneOrManyOperation: oneToOneOrManyOperation
+        oneToOneOrManyOptions: oneToOneOrManyOptions
       };
-      const rowDataObject = this.oneToOneOrManyConnect(oneToOneOrManyOption);
+      const rowDataObject = this.oneToOneOrMany(oneToOneOrManyOption);
       obj.push(rowDataObject);
     }
 
     for (const newData of obj) {
-      this.parseCreate({
-        obj: this.result,
-        newData: newData,
-        fk: fk,
-        name: name,
-        many: many});
+      this.parseCreate({ obj: this.result, newData: newData, fk: fk, name: name, many: many});    
     }
-  
     return option;
   }
   
@@ -130,18 +124,12 @@ export class ExcelToPrisma {
    * @description Convert the data to prisma-create format by recursively calling the values.
    * @param option List of options to setting data parsing
   */
-  private parseCreate(option: IparseCreate): boolean {
+  private parseCreate(option: TparseCreate): boolean {
     const { obj, newData, fk, name, many } = option;
     if (Array.isArray(obj)) {
       // Add data by recursively calling a method for each item in the array
       for (const item of obj) {
-        if (this.parseCreate({
-          obj: item,
-          newData: newData,
-          fk: fk,
-          name: name,
-          many: many
-        })) return true;
+        if (this.parseCreate({obj: item, newData: newData, fk: fk, name: name, many: many })) return true;
       }
     } else if (typeof obj === 'object' && obj !== null) {
       // Check whether the foreign key (fk) of obj matches the foreign key of the new object (newData)
@@ -158,13 +146,7 @@ export class ExcelToPrisma {
       // Add data by recursively calling methods for each property of an object.
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-          if (this.parseCreate({
-            obj: obj[key],
-            newData: newData,
-            fk: fk,
-            name: name,
-            many: many
-          })) return true;
+          if (this.parseCreate({ obj: obj[key], newData: newData, fk: fk, name: name, many: many })) return true;
         }
       }
     }
@@ -176,7 +158,7 @@ export class ExcelToPrisma {
    * @todo Empty array needs to be removed from parseCreate method
    * @param data target data to remove empty arrays
    */
-  private removeEmptyArrays(data: Array<IrowObject>): Array<IrowObject> {
+  private removeEmptyArrays(data: Array<TrowObject>): Array<TrowObject> {
     return data.map(user => {
         for (const key in user) {
             if (Array.isArray(user[key]) && user[key].length === 0) {
@@ -192,7 +174,7 @@ export class ExcelToPrisma {
   /**
    * @description Get data
    */
-  public getData(): Array<IrowObject> {
+  public getData(): Array<TrowObject> {
     return this.removeEmptyArrays(this.result);
   }
 }

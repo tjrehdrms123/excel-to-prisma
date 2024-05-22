@@ -1,2 +1,2 @@
 export * from './excel-to-prisma';
-export * from './interface';
+export * from './type';

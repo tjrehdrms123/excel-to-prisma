@@ -20,24 +20,60 @@ First, import and create an instance of excel-to-prisma with the path to your Ex
 import { ExcelToPrisma } from "excel-to-prisma";
 
 const excelToPrisma = new ExcelToPrisma({
-  filePath: "./data.xlsx", // your xlsx file
-  oneToOneOrManyConnectOptions: {
-    keyword: "info", // Separator string for one-to-many relationship
-    split: "|", // String to separate multiple values
+  // ==========
+  // your xlsx file
+  // ==========
+  filePath: "./data.xlsx",
+
+  // ==========
+  // primary key Delimiter
+  // ex) userId -> Id, user_id -> _id
+  // ==========
+  pkDelimiterString: "Id",
+
+  // ==========
+  // oneToOneOrMany Option
+  //  - split: String to separate multiple values
+  //    - ex) 1|2
+  // ==========
+  oneToOneOrManyOptions: {
+    split: "|",
   },
 });
 await excelToPrisma.initialize();
 ```
 
-### Read parent table
+### Read single table
 
-When parsing the parent table, write it as follows:
+When parsing the single table, write it as follows:
 
 ```js
 await excelToPrisma.readSheet({
-  name: "user",
+  name: "banner",
   rowNameIndex: 2,
   startRowIndex: 3,
+});
+```
+
+If there is a oneToOneOrMany value, set it as follows:
+
+```js
+await excelToPrisma.readSheet({
+  name: "banner",
+  rowNameIndex: 2,
+  startRowIndex: 3,
+  // ==========
+  // oneToOneOrMany Options
+  //  - key: one or many key name
+  //  - option: one | many
+  //     - one -> single object
+  //     - many -> array
+  //  - operation: connect | set | disconnect
+  // ==========
+  oneToOneOrManyOptions: [
+    { key: "infoProductTag", option: "many", operation: "connect" },
+    { key: "infoProductTag", option: "one", operation: "set" },
+  ],
 });
 ```
 
@@ -53,6 +89,7 @@ await excelToPrisma.oneToManyCreate({
   fk: "userId",
   rowNameIndex: 2,
   startRowIndex: 3,
+  // Optional: oneToOneOrManyOptions Options
 });
 ```
 
@@ -71,15 +108,29 @@ await excelToPrisma
         many: sheetOption.name,
         rowNameIndex: 2,
         startRowIndex: 3,
+        oneToOneOrManyOptions: [
+          { key: "infoProductTag", option: "many", operation: "connect" },
+          { key: "infoProductTag", option: "one", operation: "set" },
+        ],
       })
       .then(async (sheetOption) => {
-        await excelToPrisma.oneToManyCreate({
-          name: "productComment",
-          fk: "productId",
-          many: sheetOption.name,
-          rowNameIndex: 2,
-          startRowIndex: 3,
-        });
+        await excelToPrisma
+          .oneToManyCreate({
+            name: "productComment",
+            fk: "productId",
+            many: sheetOption.name,
+            rowNameIndex: 2,
+            startRowIndex: 3,
+          })
+          .then(async (sheetOption) => {
+            await excelToPrisma.oneToManyCreate({
+              name: "productCommentHistory",
+              fk: "productCommentId",
+              many: sheetOption.name,
+              rowNameIndex: 2,
+              startRowIndex: 3,
+            });
+          });
       });
   });
 ```
@@ -94,8 +145,8 @@ async function main() {
   // parse excel to prisma
   const excelToPrisma = new ExcelToPrisma({
     filePath: "./data.xlsx",
-    oneToOneOrManyConnectOptions: {
-      keyword: "info",
+    pkDelimiterString: "Id",
+    oneToOneOrManyOptions: {
       split: "|",
     },
   });
@@ -103,13 +154,6 @@ async function main() {
   await excelToPrisma
     .readSheet({ name: "user", rowNameIndex: 2, startRowIndex: 3 })
     .then(async (sheetOption) => {
-      await excelToPrisma.oneToManyCreate({
-        name: "post",
-        fk: "userId",
-        many: sheetOption.name,
-        rowNameIndex: 2,
-        startRowIndex: 3,
-      });
       await excelToPrisma
         .oneToManyCreate({
           name: "product",
@@ -117,6 +161,10 @@ async function main() {
           many: sheetOption.name,
           rowNameIndex: 2,
           startRowIndex: 3,
+          oneToOneOrManyOptions: [
+            { key: "infoProductTag", option: "many", operation: "connect" },
+            { key: "infoProductTag", option: "one", operation: "set" },
+          ],
         })
         .then(async (sheetOption) => {
           await excelToPrisma
