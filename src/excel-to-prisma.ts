@@ -59,7 +59,7 @@ export class ExcelToPrisma {
       if(oneToOneOrManyOptions != undefined && oneToOneOrManyOptions.length > 0) {
         oneToOneOrManyOptions.forEach((oneToOneOrManyOption) => {
           const { key, option, operation } = oneToOneOrManyOption;
-          if (columnName === key) {
+          if (columnName === key && rowDatas[index] !== undefined) {
             obj[columnName] = {
               [operation]: this.oneToOneOrManyParse({ value: rowDatas[index], optionType: option })
             };
